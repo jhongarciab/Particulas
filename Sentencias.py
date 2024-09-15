@@ -31,9 +31,5 @@ class SentenciasSQL:
     INSERT INTO {} (nombre, quarks, espín, extrañeza, carga_electrica, numero_barionico, numero_leptonico, masa, grupo)
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
     '''
-    
-    SELECCIONAR_PARTICULA = '''
-    SELECT * FROM {} WHERE nombre = %s;
-    '''
 
 

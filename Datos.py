@@ -48,7 +48,10 @@ from OperacionesParticulas import OperacionesParticulas
 #OperacionesParticulas.insertar_particula('mesones', 'Antieta', 'u̅u̅/d̅d̅/s̅s̅', 0.0, 0, 0.0, 0, 0, 547.9)  # Antieta
 
 #OperacionesParticulas.crear_tabla_conjunta('particulas')
-# Fotón como bosón (espín 1)
+#Fotón como bosón (espín 1)
 #OperacionesParticulas.insertar_particula('particulas', 'Fotón', 'γ', 1.0, 0, 0.0, 0, 0, 0.0, 'boson')  # Fotón (γ)
 
 #OperacionesParticulas.insertar_datos_unificados()
+
+#OperacionesParticulas.mostrar_datos('particulas')
+
