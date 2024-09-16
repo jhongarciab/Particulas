@@ -16,6 +16,7 @@ else:
 particulas_iniciales, particulas_finales = OperacionesParticulas.seleccionar_particulas(estado_inicial, estado_final)
 
 # Mostrar la interacción
+print("La interación es: ")
 OperacionesParticulas.mostrar_interaccion(particulas_iniciales, particulas_finales)
 
 # Obtener las propiedades de las partículas seleccionadas

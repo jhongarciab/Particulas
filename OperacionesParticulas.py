@@ -167,7 +167,7 @@ class OperacionesParticulas:
         propiedades = []
         with CursorDelPool() as cursor:
             for particula_id in particulas_ids:
-                cursor.execute(f"SELECT nombre, numero_barionico, numero_leptonico, carga_electrica, masa FROM particulas WHERE id = {particula_id};")
+                cursor.execute(f"SELECT nombre, extrañeza, numero_barionico, numero_leptonico, carga_electrica, masa FROM particulas WHERE id = {particula_id};")
                 resultado = cursor.fetchone()
                 if resultado:
                     propiedades.append({
@@ -175,7 +175,8 @@ class OperacionesParticulas:
                         'numero_barionico': resultado[1],
                         'numero_leptonico': resultado[2],
                         'carga_electrica': resultado[3],
-                        'masa': resultado[4]  # Energía en este caso sería representada por la masa
+                        'extrañeza': resultado[4],
+                        'masa': resultado[5]  # Energía en este caso sería representada por la masa
                     })
         return propiedades
 
@@ -197,17 +198,26 @@ class OperacionesParticulas:
         energia_inicial = sum([p['masa'] for p in propiedades_iniciales])
         energia_final = sum([p['masa'] for p in propiedades_finales])
 
+        extrañeza_inicial = sum([p['extrañeza'] for p in propiedades_iniciales])
+        extrañeza_final = sum([p['extrañeza'] for p in propiedades_finales])
+
         # Verificar si todas las leyes de conservación se cumplen
         conservacion_barionica = suma_barionica_inicial == suma_barionica_final
         conservacion_leptonica = suma_leptonica_inicial == suma_leptonica_final
         conservacion_carga = carga_inicial == carga_final
-        conservacion_energia = energia_inicial == energia_final
+        conservacion_energia = energia_inicial >= energia_final
+        conservacion_extrañeza = extrañeza_inicial == extrañeza_final
 
         # Si todas las leyes se cumplen, el proceso es posible
-        if conservacion_barionica and conservacion_leptonica and conservacion_carga and conservacion_energia:
-            print("El proceso es físicamente posible ya que cumple con las leyes de conservación.")
+        proceso_posible = conservacion_barionica and conservacion_leptonica and conservacion_carga and conservacion_energia
+
+        if proceso_posible:
+            if not conservacion_extrañeza:
+                print("El proceso es físicamente posible aunque no cumple con la conservación de la extrañeza.")
+            else:
+                print("El proceso es físicamente posible ya que cumple con todas las leyes de conservación.")
         else:
-            print("El proceso no es físicamente posible debido a la siguiente(s) ley(es) no conservada(s):")
+            print("El proceso no es físicamente posible debido a la(s) siguiente(s) ley(es) no conservada(s):")
             if not conservacion_barionica:
                 print("- No se conserva el número bariónico.")
             if not conservacion_leptonica:
@@ -216,5 +226,7 @@ class OperacionesParticulas:
                 print("- No se conserva la carga eléctrica.")
             if not conservacion_energia:
                 print("- No se conserva la energía.")
+            if not conservacion_extrañeza:
+                print("- No se conserva la extrañeza")
 
 
