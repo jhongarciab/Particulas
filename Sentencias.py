@@ -4,7 +4,7 @@ class SentenciasSQL:
         id SERIAL PRIMARY KEY,
         nombre VARCHAR(50) NOT NULL,
         quarks VARCHAR(50),
-        espín DECIMAL(3, 1) NOT NULL,
+        momento_angular DECIMAL(3, 1) NOT NULL,
         extrañeza INT NOT NULL,
         carga_electrica DECIMAL(3, 1) NOT NULL,
         numero_barionico INT NOT NULL,
@@ -17,7 +17,7 @@ class SentenciasSQL:
         id SERIAL PRIMARY KEY,
         nombre VARCHAR(50) NOT NULL,
         quarks VARCHAR(50),
-        espín DECIMAL(3, 1) NOT NULL,
+        momento_angular DECIMAL(3, 1) NOT NULL,
         extrañeza INT NOT NULL,
         carga_electrica DECIMAL(3, 1) NOT NULL,
         numero_barionico INT NOT NULL,
@@ -28,7 +28,7 @@ class SentenciasSQL:
     '''
     
     INSERTAR_PARTICULA = '''
-    INSERT INTO {} (nombre, quarks, espín, extrañeza, carga_electrica, numero_barionico, numero_leptonico, masa, grupo)
+    INSERT INTO {} (nombre, quarks, momento_angular, extrañeza, carga_electrica, numero_barionico, numero_leptonico, masa, grupo)
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
     '''
 
