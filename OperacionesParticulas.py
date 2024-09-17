@@ -23,13 +23,13 @@ class OperacionesParticulas:
             print(f"Tabla '{nombre_tabla}' creada o ya existe.")
 
     @staticmethod
-    def insertar_particula(nombre_tabla, nombre, quarks, espín, extrañeza, carga_electrica, numero_barionico, numero_leptonico, masa, grupo):
+    def insertar_particula(nombre_tabla, nombre, quarks, momento_angular, extrañeza, carga_electrica, numero_barionico, numero_leptonico, masa, grupo):
         """
         Inserta una partícula en la tabla especificada ('bariones', 'mesones' o 'leptones').
         """
         with CursorDelPool() as cursor:
             cursor.execute(SentenciasSQL.INSERTAR_PARTICULA.format(nombre_tabla), 
-                           (nombre, quarks, espín, extrañeza, carga_electrica, numero_barionico, numero_leptonico, masa, grupo))
+                           (nombre, quarks, momento_angular, extrañeza, carga_electrica, numero_barionico, numero_leptonico, masa, grupo))
             print(f"Partícula '{nombre}' insertada en la tabla '{nombre_tabla}'.")
     
     @staticmethod
@@ -50,22 +50,22 @@ class OperacionesParticulas:
             try:
                 # Bariones
                 cursor.execute('''
-                INSERT INTO particulas (nombre, quarks, espín, extrañeza, carga_electrica, numero_barionico, numero_leptonico, masa, grupo)
-                SELECT nombre, quarks, espín, extrañeza, carga_electrica, numero_barionico, numero_leptonico, masa, 'barion'
+                INSERT INTO particulas (nombre, quarks, momento_angular, extrañeza, carga_electrica, numero_barionico, numero_leptonico, masa, grupo)
+                SELECT nombre, quarks, momento_angular, extrañeza, carga_electrica, numero_barionico, numero_leptonico, masa, 'barion'
                 FROM bariones;
                 ''')
 
                 # Leptones
                 cursor.execute('''
-                INSERT INTO particulas (nombre, quarks, espín, extrañeza, carga_electrica, numero_barionico, numero_leptonico, masa, grupo)
-                SELECT nombre, quarks, espín, extrañeza, carga_electrica, numero_barionico, numero_leptonico, masa, 'lepton'
+                INSERT INTO particulas (nombre, quarks, momento_angular, extrañeza, carga_electrica, numero_barionico, numero_leptonico, masa, grupo)
+                SELECT nombre, quarks, momento_angular, extrañeza, carga_electrica, numero_barionico, numero_leptonico, masa, 'lepton'
                 FROM leptones;
                 ''')
 
                 # Mesones
                 cursor.execute('''
-                INSERT INTO particulas (nombre, quarks, espín, extrañeza, carga_electrica, numero_barionico, numero_leptonico, masa, grupo)
-                SELECT nombre, quarks, espín, extrañeza, carga_electrica, numero_barionico, numero_leptonico, masa, 'meson'
+                INSERT INTO particulas (nombre, quarks, momento_angular, extrañeza, carga_electrica, numero_barionico, numero_leptonico, masa, grupo)
+                SELECT nombre, quarks, momento_angular, extrañeza, carga_electrica, numero_barionico, numero_leptonico, masa, 'meson'
                 FROM mesones;
                 ''')
 
@@ -167,16 +167,17 @@ class OperacionesParticulas:
         propiedades = []
         with CursorDelPool() as cursor:
             for particula_id in particulas_ids:
-                cursor.execute(f"SELECT nombre, extrañeza, numero_barionico, numero_leptonico, carga_electrica, masa FROM particulas WHERE id = {particula_id};")
+                cursor.execute(f"SELECT nombre, momento_angular, extrañeza, numero_barionico, numero_leptonico, carga_electrica, masa FROM particulas WHERE id = {particula_id};")
                 resultado = cursor.fetchone()
                 if resultado:
                     propiedades.append({
                         'nombre': resultado[0],
-                        'numero_barionico': resultado[1],
-                        'numero_leptonico': resultado[2],
-                        'carga_electrica': resultado[3],
-                        'extrañeza': resultado[4],
-                        'masa': resultado[5]  # Energía en este caso sería representada por la masa
+                        'momento_angular': resultado[1],
+                        'numero_barionico': resultado[2],
+                        'numero_leptonico': resultado[3],
+                        'carga_electrica': resultado[4],
+                        'extrañeza': resultado[5],
+                        'masa': resultado[6]  # Energía en este caso sería representada por la masa
                     })
         return propiedades
 
@@ -192,6 +193,9 @@ class OperacionesParticulas:
         suma_leptonica_inicial = sum([p['numero_leptonico'] for p in propiedades_iniciales])
         suma_leptonica_final = sum([p['numero_leptonico'] for p in propiedades_finales])
 
+        momento_angular_inicial = sum([p['momento_angular'] for p in propiedades_iniciales])
+        momento_angular_final = sum([p['momento_angular'] for p in propiedades_finales])
+
         carga_inicial = sum([p['carga_electrica'] for p in propiedades_iniciales])
         carga_final = sum([p['carga_electrica'] for p in propiedades_finales])
 
@@ -206,6 +210,7 @@ class OperacionesParticulas:
         conservacion_leptonica = suma_leptonica_inicial == suma_leptonica_final
         conservacion_carga = carga_inicial == carga_final
         conservacion_energia = energia_inicial >= energia_final
+        conservacion_momento = momento_angular_inicial >= momento_angular_final
         conservacion_extrañeza = extrañeza_inicial == extrañeza_final
 
         # Si todas las leyes se cumplen, el proceso es posible
@@ -214,10 +219,14 @@ class OperacionesParticulas:
         if proceso_posible:
             if not conservacion_extrañeza:
                 print("El proceso es físicamente posible aunque no cumple con la conservación de la extrañeza.")
+            if not conservacion_momento:
+                print("El proceso es físicamente posible aunque no cumple con la conservación del momento.")
             else:
                 print("El proceso es físicamente posible ya que cumple con todas las leyes de conservación.")
         else:
             print("El proceso no es físicamente posible debido a la(s) siguiente(s) ley(es) no conservada(s):")
+            if not conservacion_momento:
+                print("- No se conserva el momento angular.")
             if not conservacion_barionica:
                 print("- No se conserva el número bariónico.")
             if not conservacion_leptonica:
