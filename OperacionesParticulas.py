@@ -1,6 +1,7 @@
 from Cursor import CursorDelPool
 from Sentencias import SentenciasSQL
 from tabulate import tabulate
+from itertools import combinations
 
 class OperacionesParticulas:
     
@@ -131,6 +132,16 @@ class OperacionesParticulas:
                 print("Por favor ingrese un número válido.")
         
         return particulas_iniciales, particulas_finales
+    
+    @staticmethod
+    def obtener_todas_las_particulas():
+        """
+        Obtiene todas las partículas de la base de datos.
+        """
+        with CursorDelPool() as cursor:
+            cursor.execute("SELECT nombre, masa FROM particulas;")
+            particulas = cursor.fetchall()
+            return [{'nombre': p[0], 'masa': p[1]} for p in particulas]
 
 
     @staticmethod
@@ -167,40 +178,37 @@ class OperacionesParticulas:
         propiedades = []
         with CursorDelPool() as cursor:
             for particula_id in particulas_ids:
-                cursor.execute(f"SELECT nombre, momento_angular, extrañeza, numero_barionico, numero_leptonico, carga_electrica, masa FROM particulas WHERE id = {particula_id};")
+                cursor.execute(f"SELECT nombre, momento_angular, extrañeza, carga_electrica, numero_barionico, numero_leptonico, masa FROM particulas WHERE id = {particula_id};")
                 resultado = cursor.fetchone()
                 if resultado:
                     propiedades.append({
                         'nombre': resultado[0],
                         'momento_angular': resultado[1],
-                        'numero_barionico': resultado[2],
-                        'numero_leptonico': resultado[3],
-                        'carga_electrica': resultado[4],
-                        'extrañeza': resultado[5],
+                        'extrañeza': resultado[2],
+                        'carga_electrica': resultado[3],
+                        'numero_barionico': resultado[4],
+                        'numero_leptonico': resultado[5],
                         'masa': resultado[6]  # Energía en este caso sería representada por la masa
                     })
         return propiedades
 
     @staticmethod
-    def verificar_leyes_conservacion(propiedades_iniciales, propiedades_finales):
+    def verificar_leyes_conservacion(propiedades_iniciales, propiedades_finales, particulas_posibles):
         """
-        Verifica las leyes de conservación entre el estado inicial y final.
+        Verifica las leyes de conservación entre el estado inicial y final, y sugiere nuevas partículas si hay masa sobrante.
         """
         # Inicializar acumuladores
-        suma_barionica_inicial = sum([p['numero_barionico'] for p in propiedades_iniciales])
-        suma_barionica_final = sum([p['numero_barionico'] for p in propiedades_finales])
-
+        suma_barionica_inicial = sum([int(p['numero_barionico']) for p in propiedades_iniciales])
+        suma_barionica_final = sum([int(p['numero_barionico']) for p in propiedades_finales])
+        
         suma_leptonica_inicial = sum([p['numero_leptonico'] for p in propiedades_iniciales])
         suma_leptonica_final = sum([p['numero_leptonico'] for p in propiedades_finales])
-
-        momento_angular_inicial = sum([p['momento_angular'] for p in propiedades_iniciales])
-        momento_angular_final = sum([p['momento_angular'] for p in propiedades_finales])
 
         carga_inicial = sum([p['carga_electrica'] for p in propiedades_iniciales])
         carga_final = sum([p['carga_electrica'] for p in propiedades_finales])
 
-        energia_inicial = sum([p['masa'] for p in propiedades_iniciales])
-        energia_final = sum([p['masa'] for p in propiedades_finales])
+        masa_inicial = sum([p['masa'] for p in propiedades_iniciales])
+        masa_final = sum([p['masa'] for p in propiedades_finales])
 
         extrañeza_inicial = sum([p['extrañeza'] for p in propiedades_iniciales])
         extrañeza_final = sum([p['extrañeza'] for p in propiedades_finales])
@@ -209,33 +217,48 @@ class OperacionesParticulas:
         conservacion_barionica = suma_barionica_inicial == suma_barionica_final
         conservacion_leptonica = suma_leptonica_inicial == suma_leptonica_final
         conservacion_carga = carga_inicial == carga_final
-        conservacion_energia = energia_inicial >= energia_final
-        conservacion_momento = momento_angular_inicial >= momento_angular_final
+        conservacion_masa = masa_inicial >= masa_final
         conservacion_extrañeza = extrañeza_inicial == extrañeza_final
 
-        # Si todas las leyes se cumplen, el proceso es posible
-        proceso_posible = conservacion_barionica and conservacion_leptonica and conservacion_carga and conservacion_energia
+        proceso_posible = conservacion_barionica and conservacion_leptonica and conservacion_carga and conservacion_masa
 
         if proceso_posible:
-            if not conservacion_extrañeza:
-                print("El proceso es físicamente posible aunque no cumple con la conservación de la extrañeza.")
-            if not conservacion_momento:
-                print("El proceso es físicamente posible aunque no cumple con la conservación del momento.")
+            if masa_inicial > masa_final:
+                masa_sobrante = masa_inicial - masa_final
+                print(f"Masa sobrante: {masa_sobrante}")
+
+                # Filtrar partículas posibles que tengan masa menor o igual a la masa sobrante
+                particulas_filtradas = [p for p in particulas_posibles if p['masa'] <= masa_sobrante]
+                
+                # Probar combinaciones de partículas filtradas
+                for r in range(1, len(particulas_filtradas) + 1):
+                    for combinacion in combinations(particulas_filtradas, r):
+                        suma_masas = sum([p['masa'] for p in combinacion])
+                        
+                        if abs(suma_masas - masa_sobrante) < 1.0:  # Tolerancia mayor
+                            nombres_particulas = [p['nombre'] for p in combinacion]
+                            print(f"La masa sobrante puede convertirse en: {', '.join(nombres_particulas)}")
+                            return
+
+                print("El proceso es físicamente posible, pero no se encontraron partículas adecuadas para la masa sobrante.")
             else:
                 print("El proceso es físicamente posible ya que cumple con todas las leyes de conservación.")
+
+            if not conservacion_extrañeza:
+                print("Aunque no se conserva la extrañeza.")
         else:
             print("El proceso no es físicamente posible debido a la(s) siguiente(s) ley(es) no conservada(s):")
-            if not conservacion_momento:
-                print("- No se conserva el momento angular.")
             if not conservacion_barionica:
                 print("- No se conserva el número bariónico.")
             if not conservacion_leptonica:
                 print("- No se conserva el número leptónico.")
             if not conservacion_carga:
                 print("- No se conserva la carga eléctrica.")
-            if not conservacion_energia:
+            if not conservacion_masa:
                 print("- No se conserva la energía.")
             if not conservacion_extrañeza:
-                print("- No se conserva la extrañeza")
+                print("- No se conserva la extrañeza.")
+
+
 
 

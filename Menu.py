@@ -16,12 +16,13 @@ else:
 particulas_iniciales, particulas_finales = OperacionesParticulas.seleccionar_particulas(estado_inicial, estado_final)
 
 # Mostrar la interacción
-print("La interación es: ")
+print("La interacción es: ")
 OperacionesParticulas.mostrar_interaccion(particulas_iniciales, particulas_finales)
 
 # Obtener las propiedades de las partículas seleccionadas
 propiedades_iniciales = OperacionesParticulas.obtener_propiedades_particulas(particulas_iniciales)
 propiedades_finales = OperacionesParticulas.obtener_propiedades_particulas(particulas_finales)
+particulas_posibles = OperacionesParticulas.obtener_todas_las_particulas()
 
-# Verificar las leyes de conservación
-OperacionesParticulas.verificar_leyes_conservacion(propiedades_iniciales, propiedades_finales)
+OperacionesParticulas.verificar_leyes_conservacion(propiedades_iniciales, propiedades_finales, particulas_posibles)
+
