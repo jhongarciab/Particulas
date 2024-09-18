@@ -2,7 +2,7 @@ from OperacionesParticulas import OperacionesParticulas
 
 # Solicitar el número de partículas
 estado_inicial, estado_final = OperacionesParticulas.solicitar_cantidad_particulas()
-
+11
 #Mostrar las partículas disponibles
 OperacionesParticulas.mostrar_datos('particulas')
 
