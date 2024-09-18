@@ -193,6 +193,61 @@ class OperacionesParticulas:
         return propiedades
 
     @staticmethod
+    def verificar_conservacion_momento_angular(particulas_iniciales, particulas_finales):
+        """
+        Verifica si se conserva el momento angular entre las partículas iniciales y finales.
+        La conservación se cumple si al menos un valor del momento angular de las combinaciones iniciales 
+        coincide con algún valor de las combinaciones finales.
+        """
+        # Extraer los momentos angulares de las partículas iniciales y finales
+        momentos_iniciales = [p["momento_angular"] for p in particulas_iniciales]
+        momentos_finales = [p["momento_angular"] for p in particulas_finales]
+
+        # Generar las combinaciones de momentos angulares posibles para los estados inicial y final
+        combinaciones_iniciales = OperacionesParticulas.generar_lista_momentos_angulares(momentos_iniciales)
+        combinaciones_finales = OperacionesParticulas.generar_lista_momentos_angulares(momentos_finales)
+
+        # Verificar si existe al menos un valor en común entre las combinaciones iniciales y finales
+        for momento_inicial in combinaciones_iniciales:
+            if momento_inicial in combinaciones_finales:
+                return True  # Se encontró una coincidencia, momento angular conservado
+
+        return False  # No se encontró ninguna coincidencia, momento angular no conservado
+
+    @staticmethod
+    def generar_lista_momentos_angulares(momentos_angulares):
+        """
+        Genera todas las combinaciones posibles de momentos angulares sumados y restados entre sí.
+        """
+        if len(momentos_angulares) == 1:
+            return [momentos_angulares[0]]
+        
+        # Tomamos el primer par y generamos la primera combinación de suma y resta
+        j1 = momentos_angulares[0]
+        j2 = momentos_angulares[1]
+        
+        primera = [j1 + j2, abs(j1 - j2)]
+        if primera[0] - 1 != primera[1]:
+            primera.append(primera[0] - 1)
+            primera.sort()
+
+        # Iteramos sobre las partículas restantes
+        for i in range(2, len(momentos_angulares)):
+            j = momentos_angulares[i]
+            nueva_lista = []
+            # Para cada valor en la lista actual, sumamos y restamos el nuevo momento angular
+            for val in primera:
+                if val + j not in nueva_lista:
+                    nueva_lista.append(val + j)
+                if abs(val - j) not in nueva_lista:
+                    nueva_lista.append(abs(val - j))
+            
+            nueva_lista.sort()
+            primera = nueva_lista
+
+        return primera
+
+    @staticmethod
     def verificar_leyes_conservacion(propiedades_iniciales, propiedades_finales, particulas_posibles):
         """
         Verifica las leyes de conservación entre el estado inicial y final, y sugiere nuevas partículas si hay masa sobrante.
@@ -213,6 +268,9 @@ class OperacionesParticulas:
         extrañeza_inicial = sum([p['extrañeza'] for p in propiedades_iniciales])
         extrañeza_final = sum([p['extrañeza'] for p in propiedades_finales])
 
+        # Verificar conservación del momento angular
+        conservacion_momento_angular = OperacionesParticulas.verificar_conservacion_momento_angular(propiedades_iniciales, propiedades_finales)
+
         # Verificar si todas las leyes de conservación se cumplen
         conservacion_barionica = suma_barionica_inicial == suma_barionica_final
         conservacion_leptonica = suma_leptonica_inicial == suma_leptonica_final
@@ -220,7 +278,8 @@ class OperacionesParticulas:
         conservacion_masa = masa_inicial >= masa_final
         conservacion_extrañeza = extrañeza_inicial == extrañeza_final
 
-        proceso_posible = conservacion_barionica and conservacion_leptonica and conservacion_carga and conservacion_masa
+        proceso_posible = (conservacion_barionica and conservacion_leptonica and 
+                           conservacion_carga and conservacion_masa and conservacion_momento_angular)
 
         if proceso_posible:
             if masa_inicial > masa_final:
@@ -256,9 +315,8 @@ class OperacionesParticulas:
                 print("- No se conserva la carga eléctrica.")
             if not conservacion_masa:
                 print("- No se conserva la energía.")
-            if not conservacion_extrañeza:
-                print("- No se conserva la extrañeza.")
-
+            if not conservacion_momento_angular:
+                print("- No se conserva el momento angular.")
 
 
 
